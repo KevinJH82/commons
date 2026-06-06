@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Structural Interpretation Metadata",
+  "description": "geo-stru 标准输出的 metadata.json 字段定义。地质构造解译产品(地形量算 + 线性体提取)遵循此 schema,供 geo-analyser / geo-exploration / geo-reporter 通过 AOI 目录 + bbox 相交发现并消费。",
+  "type": "object",
+  "required": [
+    "source",
+    "aoi_name",
+    "aoi_bbox",
+    "crs",
+    "products"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "const": "geo-stru",
+      "description": "产品来源,固定为 geo-stru"
+    },
+    "source_version": {
+      "type": ["string", "null"],
+      "description": "geo-stru 处理流水线版本"
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "本次分析的 run 标识(时间戳+task_id);产物存于 <AOI>/structural/<run_id>/,历史不覆盖"
+    },
+    "aoi_name": {
+      "type": "string",
+      "description": "AOI 名称(来自 KML <name>,回退文件名)"
+    },
+    "aoi_bbox": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[min_lon, min_lat, max_lon, max_lat]"
+    },
+    "crs": {
+      "type": "string",
+      "default": "EPSG:4326",
+      "description": "输出栅格的 CRS"
+    },
+    "dem_shape": {
+      "type": "array",
+      "items": {"type": "integer"},
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[height, width] 裁剪后 DEM 像素尺寸"
+    },
+    "pixel_size_m": {
+      "type": ["array", "null"],
+      "items": {"type": "number"},
+      "description": "[x, y] 像元地面尺寸(米)"
+    },
+    "products": {
+      "type": "object",
+      "description": "产品文件相对路径(相对 structural 目录)",
+      "properties": {
+        "hillshade": {"type": ["string", "null"]},
+        "aspect": {"type": ["string", "null"]},
+        "slope": {"type": ["string", "null"]},
+        "curvature": {"type": ["string", "null"]},
+        "svf": {"type": ["string", "null"]},
+        "openness": {"type": ["string", "null"]},
+        "distance_to_lineament": {"type": ["string", "null"]},
+        "lineament_density": {"type": ["string", "null"]},
+        "lineaments_geojson": {"type": ["string", "null"]},
+        "rose_diagram": {"type": ["string", "null"]},
+        "map_hillshade_png": {"type": ["string", "null"]},
+        "map_aspect_png": {"type": ["string", "null"]},
+        "map_terrain_png": {"type": ["string", "null"]}
+      }
+    },
+    "structural_stats": {
+      "type": "object",
+      "description": "下游(geo-reporter/geo-exploration/geo-analyser)消费用的快速构造统计",
+      "properties": {
+        "n_lineaments": {"type": ["integer", "null"]},
+        "total_lineament_length_km": {"type": ["number", "null"]},
+        "lineament_density_mean": {"type": ["number", "null"]},
+        "dominant_strikes_deg": {
+          "type": ["array", "null"],
+          "items": {"type": "number"},
+          "description": "主构造方向(走向,度),按显著度降序"
+        },
+        "elevation_range_m": {
+          "type": ["array", "null"],
+          "items": {"type": "number"},
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

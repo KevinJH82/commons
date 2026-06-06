@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InSAR Pair Metadata",
+  "description": "geo-insar 标准输出的 metadata.json 字段定义。所有 InSAR 产品(HyP3 / 本地 SNAP / LiCSAR)都遵循此 schema。",
+  "type": "object",
+  "required": [
+    "pair_id",
+    "master_date",
+    "slave_date",
+    "temporal_baseline_days",
+    "polarization",
+    "orbit_direction",
+    "frame",
+    "incidence_angle_mean",
+    "source",
+    "products"
+  ],
+  "properties": {
+    "pair_id": {
+      "type": "string",
+      "description": "干涉对唯一标识,格式 <master>_<slave>_<pol>,如 20240612_20240624_VV"
+    },
+    "master_date": {
+      "type": "string",
+      "format": "date",
+      "description": "主影像 acquisition 日期,YYYY-MM-DD"
+    },
+    "slave_date": {
+      "type": "string",
+      "format": "date",
+      "description": "从影像 acquisition 日期,YYYY-MM-DD"
+    },
+    "temporal_baseline_days": {
+      "type": "integer",
+      "description": "时间基线,天数(slave - master)"
+    },
+    "perp_baseline_m": {
+      "type": ["number", "null"],
+      "description": "垂直空间基线,米(可能未知,允许 null)"
+    },
+    "polarization": {
+      "type": "string",
+      "enum": ["VV", "VH", "HH", "HV"],
+      "description": "极化方式"
+    },
+    "orbit_direction": {
+      "type": "string",
+      "enum": ["ASCENDING", "DESCENDING"],
+      "description": "升轨/降轨"
+    },
+    "frame": {
+      "type": ["integer", "null"],
+      "description": "Sentinel-1 frame 编号(可能为 null,如 LiCSAR 用 frame ID 字符串)"
+    },
+    "frame_id": {
+      "type": ["string", "null"],
+      "description": "LiCSAR 等用的 frame ID 字符串,如 022D_05411_111111"
+    },
+    "incidence_angle_mean": {
+      "type": "number",
+      "description": "AOI 中心入射角(度),用于 LOS-to-vertical 转换"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["hyp3_gamma", "hyp3_isce_burst", "snap_local", "licsar", "egms"],
+      "description": "InSAR 产品来源"
+    },
+    "source_version": {
+      "type": ["string", "null"],
+      "description": "处理算法/工具版本,如 hyp3_sdk 版本或 SNAP 版本"
+    },
+    "aoi_name": {
+      "type": "string",
+      "description": "AOI 名称(来自 KML)"
+    },
+    "aoi_bbox": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[min_lon, min_lat, max_lon, max_lat]"
+    },
+    "crs": {
+      "type": "string",
+      "default": "EPSG:4326",
+      "description": "输出栅格的 CRS"
+    },
+    "products": {
+      "type": "object",
+      "description": "标准产品文件相对路径(相对 pair 目录)",
+      "properties": {
+        "unwrapped_phase": {"type": ["string", "null"]},
+        "coherence": {"type": ["string", "null"]},
+        "los_displacement": {"type": ["string", "null"]},
+        "wrapped_phase": {"type": ["string", "null"]},
+        "dem": {"type": ["string", "null"]},
+        "water_mask": {"type": ["string", "null"]},
+        "incidence_angle_map": {"type": ["string", "null"]}
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "下游(geo-reporter/geo-exploration)消费用的快速统计",
+      "properties": {
+        "coherence_mean": {"type": ["number", "null"]},
+        "coherence_median": {"type": ["number", "null"]},
+        "los_displacement_min_mm": {"type": ["number", "null"]},
+        "los_displacement_max_mm": {"type": ["number", "null"]},
+        "los_displacement_mean_mm": {"type": ["number", "null"]},
+        "coverage_ratio": {"type": ["number", "null"]}
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

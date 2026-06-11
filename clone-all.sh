@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 一键克隆 deepexplor-services 全部 12 个仓库到当前目录
+# 一键克隆 deepexplor-services 全部 13 个仓库到当前目录
 # ---------------------------------------------------------------
 # 用法：
 #   1) 在新设备上先配好 SSH key 并加到 GitHub：
@@ -30,6 +30,7 @@ REPOS=(
   geo-model3d
   geo-geochem
   geo-geophys
+  geo-drill
 )
 
 echo "==> 开始克隆 ${#REPOS[@]} 个仓库（用户: ${GH_USER}）"

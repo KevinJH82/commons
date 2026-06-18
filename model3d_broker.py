@@ -72,6 +72,8 @@ def scan_model3d_outputs(geo_model3d_outputs: str = DEFAULT_GEO_MODEL3D_OUTPUTS)
             "model_stats": md.get("model_stats", {}),
             "run_id": Path(md.get("metadata_path", "")).parent.name if md.get("metadata_path") else run_dir.name,
             "n_runs": n_runs,
+            "trace_id": md.get("trace_id"),
+            "linked_trace_ids": md.get("linked_trace_ids", []),
         })
     return out
 
@@ -104,10 +106,20 @@ def _bbox_intersects(a, b) -> bool:
 def find_model3d_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_model3d_outputs: str = DEFAULT_GEO_MODEL3D_OUTPUTS,
+    trace_id: Optional[str] = None,
 ) -> List[Dict]:
-    """返回与给定 bbox 相交的所有 geo-model3d 产物（供 reporter 按研究区匹配）。"""
-    return [a for a in scan_model3d_outputs(geo_model3d_outputs)
-            if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    """返回与给定 bbox 相交的所有 geo-model3d 产物（供 reporter 按研究区匹配）。
+
+    trace_id（可选）：优先按 trace_id 精确匹配（消除 bbox 歧义，见架构蓝图 §1.3）；
+    未命中或未提供则回退 bbox 相交。
+    """
+    matches = [a for a in scan_model3d_outputs(geo_model3d_outputs)
+               if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    try:
+        from commons.trace import filter_by_trace_id
+        return filter_by_trace_id(matches, trace_id)
+    except Exception:
+        return matches
 
 
 def get_product_path(entry: Dict, key: str) -> Optional[str]:

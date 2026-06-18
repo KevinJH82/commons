@@ -90,6 +90,8 @@ def _entry_from_manifest(run_dir: Path, md: dict) -> Optional[Dict]:
         "results": results,
         "structural": md.get("structural", {}),
         "figures": figures,
+        "trace_id": md.get("trace_id"),
+        "linked_trace_ids": md.get("linked_trace_ids", []),
     }
 
 
@@ -127,9 +129,17 @@ def scan_alteration_outputs(geo_analyser_outputs: str = DEFAULT_GEO_ANALYSER_OUT
 def find_alteration_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_analyser_outputs: str = DEFAULT_GEO_ANALYSER_OUTPUTS,
+    trace_id: Optional[str] = None,
 ) -> List[Dict]:
-    """返回与给定 bbox 相交的蚀变分析成果，按 created_at 降序。"""
+    """返回与给定 bbox 相交的蚀变分析成果，按 created_at 降序。
+
+    trace_id（可选）：优先按 trace_id 精确匹配，未命中回退 bbox（见架构蓝图 §1.3）。
+    """
     matches = [e for e in scan_alteration_outputs(geo_analyser_outputs)
                if _bbox_intersects(e.get("bbox"), bbox)]
     matches.sort(key=lambda e: e.get("created_at", ""), reverse=True)
-    return matches
+    try:
+        from commons.trace import filter_by_trace_id
+        return filter_by_trace_id(matches, trace_id)
+    except Exception:
+        return matches

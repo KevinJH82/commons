@@ -22,7 +22,7 @@ def _load_metadata(structural_dir: Path) -> Optional[Dict]:
     try:
         with open(mp, "r", encoding="utf-8") as f:
             md = json.load(f)
-        if md.get("source") != "geo-stru":
+        if not (md.get("source") or "").startswith("geo-stru"):
             return None
         return md
     except Exception:
@@ -59,7 +59,7 @@ def scan_structural_aois(geo_stru_outputs: str = DEFAULT_GEO_STRU_OUTPUTS) -> Li
     Returns
     -------
     [{aoi_name, aoi_bbox, crs, structural_dir, metadata_path, products,
-      structural_stats, run_id, n_runs}, ...]
+      structural_stats, deposit_inference, run_id, n_runs}, ...]
     """
     root = Path(geo_stru_outputs)
     if not root.exists():
@@ -80,8 +80,11 @@ def scan_structural_aois(geo_stru_outputs: str = DEFAULT_GEO_STRU_OUTPUTS) -> Li
             "metadata_path": str(product_dir / "metadata.json"),
             "products": md.get("products", {}),
             "structural_stats": md.get("structural_stats", {}),
+            "deposit_inference": md.get("deposit_inference"),
             "run_id": md.get("run_id"),
             "n_runs": n_runs,
+            "trace_id": md.get("trace_id"),
+            "linked_trace_ids": md.get("linked_trace_ids", []),
         })
     return out
 
@@ -120,10 +123,19 @@ def _bbox_intersects(a, b) -> bool:
 def find_structural_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_stru_outputs: str = DEFAULT_GEO_STRU_OUTPUTS,
+    trace_id: Optional[str] = None,
 ) -> List[Dict]:
-    """返回与给定 bbox 相交的所有 geo-stru 产物(供 reporter/exploration/analyser 按研究区匹配)。"""
-    return [a for a in scan_structural_aois(geo_stru_outputs)
-            if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    """返回与给定 bbox 相交的所有 geo-stru 产物(供 reporter/exploration/analyser 按研究区匹配)。
+
+    trace_id（可选）：优先按 trace_id 精确匹配，未命中回退 bbox（见架构蓝图 §1.3）。
+    """
+    matches = [a for a in scan_structural_aois(geo_stru_outputs)
+               if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    try:
+        from commons.trace import filter_by_trace_id
+        return filter_by_trace_id(matches, trace_id)
+    except Exception:
+        return matches
 
 
 def get_product_path(entry: Dict, key: str) -> Optional[str]:

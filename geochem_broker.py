@@ -59,6 +59,8 @@ def scan_geochem_outputs(geo_geochem_outputs: str = DEFAULT_GEO_GEOCHEM_OUTPUTS)
             "model_stats": md.get("model_stats", {}),
             "run_id": run_dir.name,
             "n_runs": n_runs,
+            "trace_id": md.get("trace_id"),
+            "linked_trace_ids": md.get("linked_trace_ids", []),
         })
     return out
 
@@ -89,9 +91,16 @@ def _bbox_intersects(a, b) -> bool:
 def find_geochem_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_geochem_outputs: str = DEFAULT_GEO_GEOCHEM_OUTPUTS,
+    trace_id: Optional[str] = None,
 ) -> List[Dict]:
-    return [a for a in scan_geochem_outputs(geo_geochem_outputs)
-            if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    """trace_id（可选）：优先按 trace_id 精确匹配，未命中回退 bbox（见架构蓝图 §1.3）。"""
+    matches = [a for a in scan_geochem_outputs(geo_geochem_outputs)
+               if _bbox_intersects(a.get("aoi_bbox"), bbox)]
+    try:
+        from commons.trace import filter_by_trace_id
+        return filter_by_trace_id(matches, trace_id)
+    except Exception:
+        return matches
 
 
 def get_product_path(entry: Dict, key: str) -> Optional[str]:

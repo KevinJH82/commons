@@ -13,8 +13,8 @@
   "properties": {
     "source": {
       "type": "string",
-      "const": "geo-stru",
-      "description": "产品来源,固定为 geo-stru"
+      "enum": ["geo-stru", "geo-stru-insar-fusion"],
+      "description": "产品来源: geo-stru(构造解译) 或 geo-stru-insar-fusion(InSAR 融合)"
     },
     "source_version": {
       "type": ["string", "null"],
@@ -68,7 +68,19 @@
         "rose_diagram": {"type": ["string", "null"]},
         "map_hillshade_png": {"type": ["string", "null"]},
         "map_aspect_png": {"type": ["string", "null"]},
-        "map_terrain_png": {"type": ["string", "null"]}
+        "map_terrain_png": {"type": ["string", "null"]},
+        "los_velocity_mm_yr": {"type": ["string", "null"], "description": "InSAR LOS 速率 (mm/yr)"},
+        "vertical_velocity_mm_yr": {"type": ["string", "null"], "description": "升降双轨 2D 分解垂直速率 (mm/yr)"},
+        "ew_velocity_mm_yr": {"type": ["string", "null"], "description": "升降双轨 2D 分解东西向速率 (mm/yr)"},
+        "velocity_gradient": {"type": ["string", "null"], "description": "LOS 速率梯度幅值"},
+        "deformation_lineaments_geojson": {"type": ["string", "null"], "description": "LOS 形变线性体"},
+        "ew_deformation_lineaments_geojson": {"type": ["string", "null"], "description": "东西向形变线性体 (需 2D 分解)"},
+        "lineaments_activity_geojson": {"type": ["string", "null"], "description": "地形线性体活动性标签 (dv/activity_class)"},
+        "subsidence_clusters_geojson": {"type": ["string", "null"], "description": "沉降连通域 (采空/漏斗候选)"},
+        "overlay_png": {"type": ["string", "null"], "description": "融合叠加图件"},
+        "timeseries_png": {"type": ["string", "null"], "description": "最大形变点时序曲线"},
+        "rose_deformation_png": {"type": ["string", "null"], "description": "形变线性体走向玫瑰图"},
+        "rose_ew_deformation_png": {"type": ["string", "null"], "description": "东西向形变线性体走向玫瑰图"}
       }
     },
     "structural_stats": {
@@ -89,6 +101,28 @@
           "minItems": 2,
           "maxItems": 2
         }
+      }
+    },
+    "deposit_inference": {
+      "type": ["object", "null"],
+      "description": "基于构造特征的矿床类型推理结果(geo-stru 纯构造推理,非蚀变/地球化学)",
+      "properties": {
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "deposit_type": {"type": "string"},
+              "confidence": {"type": "number"},
+              "evidence": {"type": "array", "items": {"type": "string"}},
+              "control_model": {"type": "string"},
+              "description": {"type": "string"}
+            }
+          }
+        },
+        "structural_control_summary": {"type": "string"},
+        "primary_model": {"type": "string"},
+        "primary_confidence": {"type": "number"}
       }
     },
     "created_at": {

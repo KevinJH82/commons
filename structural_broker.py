@@ -85,6 +85,7 @@ def scan_structural_aois(geo_stru_outputs: str = DEFAULT_GEO_STRU_OUTPUTS) -> Li
             "n_runs": n_runs,
             "trace_id": md.get("trace_id"),
             "linked_trace_ids": md.get("linked_trace_ids", []),
+            "tenant_id": md.get("tenant_id"),
         })
     return out
 
@@ -124,6 +125,7 @@ def find_structural_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_stru_outputs: str = DEFAULT_GEO_STRU_OUTPUTS,
     trace_id: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """返回与给定 bbox 相交的所有 geo-stru 产物(供 reporter/exploration/analyser 按研究区匹配)。
 
@@ -132,8 +134,8 @@ def find_structural_for_bbox(
     matches = [a for a in scan_structural_aois(geo_stru_outputs)
                if _bbox_intersects(a.get("aoi_bbox"), bbox)]
     try:
-        from commons.trace import filter_by_trace_id
-        return filter_by_trace_id(matches, trace_id)
+        from commons.trace import filter_by_trace_id, filter_by_tenant
+        return filter_by_trace_id(filter_by_tenant(matches, tenant_id), trace_id)
     except Exception:
         return matches
 

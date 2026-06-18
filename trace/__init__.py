@@ -19,6 +19,7 @@ from .adapter import TraceAdapter, JSONLAdapter, DEFAULT_TRACE_ROOT
 from .writer import TraceWriter, get_writer
 from .lineage import (
     resolve_trace_id, stamp_metadata, entry_matches_trace, filter_by_trace_id,
+    entry_matches_tenant, filter_by_tenant,
 )
 from .schema import (
     SCHEMA_VERSION,
@@ -37,6 +38,7 @@ __all__ = [
     "TraceAdapter", "JSONLAdapter", "DEFAULT_TRACE_ROOT",
     "TraceWriter", "get_writer",
     "resolve_trace_id", "stamp_metadata", "entry_matches_trace", "filter_by_trace_id",
+    "entry_matches_tenant", "filter_by_tenant",
     "SCHEMA_VERSION",
     "RECORD_RUN", "RECORD_STAGE", "RECORD_DECISION", "RECORD_OUTCOME",
     "DECISION_ROI_TO_MINERAL_FAMILY", "DECISION_SENSOR_SELECTION",

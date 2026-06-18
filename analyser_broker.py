@@ -92,6 +92,7 @@ def _entry_from_manifest(run_dir: Path, md: dict) -> Optional[Dict]:
         "figures": figures,
         "trace_id": md.get("trace_id"),
         "linked_trace_ids": md.get("linked_trace_ids", []),
+        "tenant_id": md.get("tenant_id"),
     }
 
 
@@ -130,6 +131,7 @@ def find_alteration_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_analyser_outputs: str = DEFAULT_GEO_ANALYSER_OUTPUTS,
     trace_id: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """返回与给定 bbox 相交的蚀变分析成果，按 created_at 降序。
 
@@ -139,7 +141,7 @@ def find_alteration_for_bbox(
                if _bbox_intersects(e.get("bbox"), bbox)]
     matches.sort(key=lambda e: e.get("created_at", ""), reverse=True)
     try:
-        from commons.trace import filter_by_trace_id
-        return filter_by_trace_id(matches, trace_id)
+        from commons.trace import filter_by_trace_id, filter_by_tenant
+        return filter_by_trace_id(filter_by_tenant(matches, tenant_id), trace_id)
     except Exception:
         return matches

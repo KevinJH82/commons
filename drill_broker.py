@@ -60,6 +60,7 @@ def scan_drill_outputs(geo_drill_outputs: str = DEFAULT_GEO_DRILL_OUTPUTS) -> Li
             "n_runs": n_runs,
             "trace_id": md.get("trace_id"),
             "linked_trace_ids": md.get("linked_trace_ids", []),
+            "tenant_id": md.get("tenant_id"),
         })
     return out
 
@@ -74,13 +75,14 @@ def find_drill_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_drill_outputs: str = DEFAULT_GEO_DRILL_OUTPUTS,
     trace_id: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """trace_id（可选）：优先按 trace_id 精确匹配，未命中回退 bbox（见架构蓝图 §1.3）。"""
     matches = [a for a in scan_drill_outputs(geo_drill_outputs)
                if _bbox_intersects(a.get("aoi_bbox"), bbox)]
     try:
-        from commons.trace import filter_by_trace_id
-        return filter_by_trace_id(matches, trace_id)
+        from commons.trace import filter_by_trace_id, filter_by_tenant
+        return filter_by_trace_id(filter_by_tenant(matches, tenant_id), trace_id)
     except Exception:
         return matches
 

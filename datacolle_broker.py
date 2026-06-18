@@ -152,6 +152,7 @@ def scan_datacolle_outputs(datacolle_outputs: str = DEFAULT_DATACOLLE_OUTPUTS) -
             "geochem_thresholds": viz.get("thresholds", {}),
             "trace_id": tm.get("trace_id"),
             "linked_trace_ids": tm.get("linked_trace_ids", []),
+            "tenant_id": tm.get("tenant_id"),
         })
     return out
 
@@ -160,6 +161,7 @@ def find_datacolle_for_bbox(
     bbox: Tuple[float, float, float, float],
     datacolle_outputs: str = DEFAULT_DATACOLLE_OUTPUTS,
     trace_id: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """返回与给定 bbox 相交的 data-colle 成果，按 created_at 降序（最新在前）。
 
@@ -169,7 +171,7 @@ def find_datacolle_for_bbox(
                if _bbox_intersects(e.get("bbox"), bbox)]
     matches.sort(key=lambda e: e.get("created_at", ""), reverse=True)
     try:
-        from commons.trace import filter_by_trace_id
-        return filter_by_trace_id(matches, trace_id)
+        from commons.trace import filter_by_trace_id, filter_by_tenant
+        return filter_by_trace_id(filter_by_tenant(matches, tenant_id), trace_id)
     except Exception:
         return matches

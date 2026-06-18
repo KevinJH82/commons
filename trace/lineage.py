@@ -41,11 +41,16 @@ def resolve_trace_id(explicit_trace_id: Optional[str] = None,
 
 
 def stamp_metadata(meta: Dict, *, explicit_trace_id: Optional[str] = None,
-                   upstream_metadatas: Optional[List[Dict]] = None) -> str:
-    """就地给 metadata dict 注入三键 trace_id/linked_trace_ids/trace_origin，返回 trace_id。
+                   upstream_metadatas: Optional[List[Dict]] = None,
+                   tenant_id: Optional[str] = None) -> str:
+    """就地给 metadata dict 注入 trace_id/linked_trace_ids/trace_origin(+可选 tenant_id)，返回 trace_id。
 
     幂等：若 meta 已含非空 trace_id 则尊重之，仅补全缺失键。
+    tenant_id（P2 租户隔离）：给定且 meta 未含 tenant_id 时写入，供 broker 发现按租户过滤。
     """
+    if tenant_id and not meta.get("tenant_id"):
+        meta["tenant_id"] = tenant_id
+
     existing = meta.get("trace_id")
     if existing:
         meta.setdefault("linked_trace_ids", [existing])
@@ -69,8 +74,35 @@ def entry_matches_trace(entry: Dict, trace_id: str) -> bool:
 
 
 def filter_by_trace_id(entries: List[Dict], trace_id: Optional[str]) -> List[Dict]:
-    """trace_id 优先筛选；trace_id 为空时原样返回（交回 broker 走 bbox 兜底）。"""
+    """trace_id 优先筛选；trace_id 为空时原样返回（交回 broker 走 bbox 兜底）。
+
+    注意：跨租户隔离由 filter_by_tenant 在本函数之前完成（broker 内先按 tenant 收窄），
+    故此处的 bbox 兜底结果已是租户安全的，未命中回退不会泄露他租户产物。
+    """
     if not trace_id:
         return entries
     hits = [e for e in entries if entry_matches_trace(e, trace_id)]
-    return hits if hits else entries  # 未命中则不收窄，保留 bbox 兜底结果
+    return hits if hits else entries  # 未命中则不收窄，保留(已租户过滤的)bbox 兜底结果
+
+
+def entry_matches_tenant(entry: Dict, tenant_id: str) -> bool:
+    """产物是否属于给定租户。
+
+    租户隔离规则(向后兼容):
+    - 调用方无 tenant_id(None) → 不过滤,放行(单服务独立跑/未启用多租户);
+    - 产物 metadata 无 tenant_id(历史未打标) → 放行(单租户时代遗留,由迁移脚本另行归属);
+    - 两者都有 → 必须相等。
+    """
+    if not tenant_id:
+        return True
+    et = (entry or {}).get("tenant_id")
+    if not et:
+        return True
+    return et == tenant_id
+
+
+def filter_by_tenant(entries: List[Dict], tenant_id: Optional[str]) -> List[Dict]:
+    """按租户收窄 broker 发现结果:丢弃明确属于他租户的产物。bbox/trace 筛选之前调用。"""
+    if not tenant_id:
+        return entries
+    return [e for e in entries if entry_matches_tenant(e, tenant_id)]

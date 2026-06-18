@@ -102,6 +102,7 @@ def scan_exploration_outputs(
             "figures": _collect_figures(run_dir, md.get("products", {})),
             "trace_id": md.get("trace_id"),
             "linked_trace_ids": md.get("linked_trace_ids", []),
+            "tenant_id": md.get("tenant_id"),
         })
     return out
 
@@ -110,6 +111,7 @@ def find_exploration_for_bbox(
     bbox: Tuple[float, float, float, float],
     geo_exploration_outputs: str = DEFAULT_GEO_EXPLORATION_OUTPUTS,
     trace_id: Optional[str] = None,
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """返回与给定 bbox 相交的深部探测成果，按 created_at 降序。
 
@@ -119,7 +121,7 @@ def find_exploration_for_bbox(
                if _bbox_intersects(e.get("bbox"), bbox)]
     matches.sort(key=lambda e: e.get("created_at", ""), reverse=True)
     try:
-        from commons.trace import filter_by_trace_id
-        return filter_by_trace_id(matches, trace_id)
+        from commons.trace import filter_by_trace_id, filter_by_tenant
+        return filter_by_trace_id(filter_by_tenant(matches, tenant_id), trace_id)
     except Exception:
         return matches

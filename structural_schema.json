@@ -22,7 +22,11 @@
     },
     "run_id": {
       "type": ["string", "null"],
-      "description": "本次分析的 run 标识(时间戳+task_id);产物存于 <AOI>/structural/<run_id>/,历史不覆盖"
+      "description": "本次分析的 run 标识(时间戳+task_code);产物存于 <AOI>/structural/<run_id>/,历史不覆盖"
+    },
+    "task_code": {
+      "type": ["string", "null"],
+      "description": "本次分析任务的全局唯一编码(形如 GST-YYYYMMDD-HHMMSS-XXXX);用于按编码回溯磁盘产物与日志"
     },
     "aoi_name": {
       "type": "string",
